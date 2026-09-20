@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>HelpDesk IA</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+
+  <body>
+    <main>
+      <h1>HelpDesk IA</h1>
+
+      <p>Triagem inteligente de chamados utilizando Inteligência Artificial.</p>
+
+      <form action="/analisar" method="POST">
+        <label for="chamado">Descreva seu problema:</label>
+
+        <br />
+
+        <textarea
+          id="chamado"
+          name="chamado"
+          rows="8"
+          cols="60"
+          placeholder="Ex: Meu computador não está conectando à internet..."
+        ></textarea>
+
+        <br /><br />
+
+        <button type="submit">Analisar chamado</button>
+      </form>
+
+      {% if chamado %}
+      <hr />
+
+      <section>
+        <h2>Resultado da análise</h2>
+
+        <p>
+          <strong>Chamado:</strong>
+          {{ chamado }}
+        </p>
+
+        <p>
+          <strong>Categoria:</strong>
+          {{ categoria }}
+        </p>
+
+        <p>
+          <strong>Prioridade:</strong>
+          {{ prioridade }}
+        </p>
+
+        <p>
+          <strong>Setor responsável:</strong>
+          {{ setor }}
+        </p>
+      </section>
+      {% endif %} {% if erro %}
+      <p>{{ erro }}</p>
+      {% endif %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  </body>
+</html>
