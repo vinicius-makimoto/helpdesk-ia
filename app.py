@@ -1,4 +1,14 @@
-#Etapa 1: importar as bibliotecas
+#Etapa 1: importar as bibliotecas e limitar os recursos utilizados pelas bibliotecas numéricas
+import os #Biblioteca utilizada para configurar variáveis de ambiente do servidor
+
+#Limita o OpenBLAS para utilizar apenas uma thread no servidor
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
+#Limita outras bibliotecas numéricas para evitar criação excessiva de threads
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
 from pathlib import Path #Biblioteca utilizada para trabalhar com caminhos de arquivos e pastas
 import joblib #Biblioteca utilizada para carregar os modelos de Machine Learning salvos
 import pandas as pd #Biblioteca utilizada para criar os dados enviados aos modelos
