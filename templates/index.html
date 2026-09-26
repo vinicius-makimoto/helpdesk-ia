@@ -9,6 +9,7 @@
     />
     <meta name="theme-color" content="#13243f" />
     <title>HelpDesk IA</title>
+
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -37,14 +38,24 @@
           <span class="brand-icon">
             <i class="bi bi-chat-square-dots-fill"></i>
           </span>
+
           <span class="brand-name"> HelpDesk <span>IA</span> </span>
         </a>
+
+        <a href="{{ url_for('dashboard') }}">
+          <span>
+            <span></span>
+            <span class="btn-dashboard">Dashboard</span>
+          </span>
+        </a>
+
         <span class="system-status">
           <span class="status-dot"></span>
           <span class="status-text">Triagem disponível</span>
         </span>
       </nav>
     </header>
+
     <main class="workspace">
       <div class="container">
         <div class="row align-items-start g-4 g-lg-5">
@@ -56,11 +67,14 @@
               <i class="bi bi-stars"></i>
               Atendimento inteligente
             </span>
+
             <h1 id="pageTitle">Como podemos ajudar?</h1>
+
             <p class="intro">
               Conte o que está acontecendo. A IA organiza seu chamado e
               direciona a solicitação para a equipe certa.
             </p>
+
             <div class="steps" aria-label="Etapas da triagem">
               <div class="step">
                 <span class="step-number">01</span>
@@ -71,6 +85,7 @@
                   </small>
                 </div>
               </div>
+
               <div class="step">
                 <span class="step-number">02</span>
                 <div>
@@ -80,6 +95,7 @@
                   </small>
                 </div>
               </div>
+
               <div class="step">
                 <span class="step-number">03</span>
                 <div>
@@ -89,6 +105,7 @@
               </div>
             </div>
           </section>
+
           <section class="col-lg-7" aria-labelledby="formTitle">
             <div class="ticket-card">
               <div class="ticket-card-header">
@@ -96,17 +113,21 @@
                   <span class="ticket-icon">
                     <i class="bi bi-pencil-square"></i>
                   </span>
+
                   <div>
                     <h2 id="formTitle" class="h5 fw-bold mb-1">Novo chamado</h2>
+
                     <p class="text-secondary small mb-0">
                       Preencha com o máximo de detalhes que puder.
                     </p>
                   </div>
                 </div>
+
                 <span class="badge rounded-pill text-bg-light border">
                   Etapa única
                 </span>
               </div>
+
               <div class="ticket-card-body">
                 <form
                   action="{{ url_for('analisar') }}"
@@ -117,6 +138,7 @@
                   <label for="chamado" class="form-label">
                     O que aconteceu?
                   </label>
+
                   <textarea
                     class="form-control"
                     id="chamado"
@@ -130,14 +152,17 @@
                   >
 {{ chamado or '' }}</textarea
                   >
+
                   <div class="d-flex justify-content-between gap-3 mt-2 mb-4">
                     <small id="chamadoAjuda" class="text-secondary">
                       Evite compartilhar senhas ou dados sensíveis.
                     </small>
+
                     <small class="character-counter text-nowrap">
                       <span id="contadorCaracteres">0</span>/1000
                     </small>
                   </div>
+
                   <div
                     id="mensagemValidacao"
                     class="alert alert-danger d-none py-2 px-3 small"
@@ -146,6 +171,7 @@
                     Conte um pouco mais sobre o problema para que a triagem seja
                     precisa.
                   </div>
+
                   <button
                     type="submit"
                     class="btn btn-primary btn-lg w-100"
@@ -155,6 +181,7 @@
                       <i class="bi bi-stars me-2"></i>
                       Analisar chamado
                     </span>
+
                     <span class="loading-label">
                       <span
                         class="spinner-border spinner-border-sm me-2"
@@ -163,6 +190,7 @@
                       Analisando...
                     </span>
                   </button>
+
                   <p class="privacy-note">
                     <i class="bi bi-shield-check"></i>
                     <span>
@@ -171,7 +199,10 @@
                     </span>
                   </p>
                 </form>
-                {% if chamado %}
+
+                {% if chamado and decision|default('') == 'ACEITAR' and
+                classification_available|default(false) and categoria is defined
+                and prioridade is defined and setor is defined %}
                 <div
                   class="modal fade"
                   id="modalResultado"
@@ -186,13 +217,39 @@
                           <span class="eyebrow mb-2">
                             Resultado da triagem
                           </span>
+
+                          {% if confidence_action|default('') == 'NORMAL' %}
                           <h2
                             class="modal-title h4 fw-bold"
                             id="modalResultadoLabel"
                           >
-                            Chamado classificado
+                            Classificação do chamado
                           </h2>
+                          {% elif confidence_action|default('') in ['SUGGESTED',
+                          'LOW_CONFIDENCE_REVIEW'] %}
+                          <h2
+                            class="modal-title h4 fw-bold"
+                            id="modalResultadoLabel"
+                          >
+                            Sugestão de classificação
+                          </h2>
+                          {% elif confidence_action|default('') == 'CAUTION' %}
+                          <h2
+                            class="modal-title h4 fw-bold"
+                            id="modalResultadoLabel"
+                          >
+                            Análise preliminar
+                          </h2>
+                          {% else %}
+                          <h2
+                            class="modal-title h4 fw-bold"
+                            id="modalResultadoLabel"
+                          >
+                            Resultado da triagem
+                          </h2>
+                          {% endif %}
                         </div>
+
                         <button
                           type="button"
                           class="btn-close"
@@ -200,17 +257,75 @@
                           aria-label="Fechar"
                         ></button>
                       </div>
+
                       <div class="modal-body">
                         <div class="d-flex justify-content-end mb-3">
+                          {% if business_impact|default('') in ['True', 'true',
+                          'BILLING_IMPACT', 'REVENUE_IMPACT'] %}
+                          <span class="result-chip text-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            Revisão prioritária
+                          </span>
+                          {% elif confidence_action|default('') == 'NORMAL' %}
                           <span class="result-chip">
                             <i class="bi bi-check-circle-fill"></i>
-                            Análise concluída
+                            Classificação concluída
                           </span>
+                          {% elif confidence_action|default('') in ['SUGGESTED',
+                          'LOW_CONFIDENCE_REVIEW'] %}
+                          <span class="result-chip text-warning">
+                            <i class="bi bi-lightbulb-fill"></i>
+                            Sugestão de classificação
+                          </span>
+                          {% else %}
+                          <span class="result-chip text-warning">
+                            <i class="bi bi-info-circle-fill"></i>
+                            Análise preliminar
+                          </span>
+                          {% endif %}
                         </div>
+
                         <div class="analyzed-ticket">
                           <small>Chamado analisado</small>
                           <p>{{ chamado }}</p>
                         </div>
+
+                        {% if business_impact|default('') in ['True', 'true',
+                        'BILLING_IMPACT', 'REVENUE_IMPACT'] %}
+                        <div
+                          class="alert alert-warning mt-3 mb-0"
+                          role="status"
+                        >
+                          O chamado menciona possível impacto no faturamento.
+                          Essa informação será confirmada pela equipe de
+                          suporte.
+                        </div>
+                        {% elif confidence_action|default('') in ['SUGGESTED',
+                        'LOW_CONFIDENCE_REVIEW'] %}
+                        <div
+                          class="alert alert-warning mt-3 mb-0"
+                          role="status"
+                        >
+                          Esta é uma sugestão de classificação. A equipe poderá
+                          revisar estas informações.
+                        </div>
+                        {% elif confidence_action|default('') == 'CAUTION' %}
+                        <div
+                          class="alert alert-warning mt-3 mb-0"
+                          role="status"
+                        >
+                          Esta é uma análise preliminar. A equipe poderá revisar
+                          estas informações.
+                        </div>
+                        {% else %}
+                        <div
+                          class="alert alert-success mt-3 mb-0"
+                          role="status"
+                        >
+                          O chamado foi classificado com sucesso.
+                        </div>
+                        {% endif %}
+
                         <div class="row g-3 mt-1">
                           <div class="col-md-4">
                             <div class="result-item">
@@ -221,6 +336,7 @@
                               <strong>{{ categoria }}</strong>
                             </div>
                           </div>
+
                           <div class="col-md-4">
                             <div class="result-item">
                               <span class="result-icon">
@@ -230,6 +346,7 @@
                               <strong>{{ prioridade }}</strong>
                             </div>
                           </div>
+
                           <div class="col-md-4">
                             <div class="result-item">
                               <span class="result-icon">
@@ -241,6 +358,7 @@
                           </div>
                         </div>
                       </div>
+
                       <div class="modal-footer border-0 pt-0">
                         <button
                           type="button"
@@ -260,56 +378,34 @@
         </div>
       </div>
     </main>
-    {% if erro %}
-    <div id="erroFlask" data-erro="{{ erro }}" class="d-none"></div>
+
+    {% if decision is defined or confidence_action is defined or
+    classification_available is defined or status is defined or
+    needs_human_review is defined or priority_source is defined or erro is
+    defined or triage_context is defined or urgency_signal is defined or
+    business_impact is defined %}
+    <div
+      id="resultadoTriagem"
+      class="d-none"
+      data-decision="{{ decision|default('', true)|e }}"
+      data-reason-code="{{ reason_code|default('', true)|e }}"
+      data-confidence-action="{{ confidence_action|default('', true)|e }}"
+      data-confidence-level="{{ confidence_level|default('', true)|e }}"
+      data-classification-available="{{ classification_available|default(false)|tojson }}"
+      data-status="{{ status|default('', true)|e }}"
+      data-needs-human-review="{{ needs_human_review|default(false)|tojson }}"
+      data-priority-source="{{ priority_source|default('', true)|e }}"
+      data-triage-context="{{ triage_context|default('', true)|e }}"
+      data-urgency-signal="{{ urgency_signal|default('', true)|e }}"
+      data-business-impact="{{ business_impact|default('', true)|e }}"
+      data-urgency-reason="{{ urgency_reason|default('', true)|e }}"
+      data-message="{{ (erro|default('', true) or confidence_message|default('', true))|e }}"
+    ></div>
     {% endif %}
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script>
-      $(document).ready(function () {
-        const $form = $("#formChamado");
-        const $textarea = $("#chamado");
-        const $contador = $("#contadorCaracteres");
-        const $botao = $("#btnAnalisar");
-        const $mensagemValidacao = $("#mensagemValidacao");
-        function atualizarContador() {
-          $contador.text($textarea.val().length);
-        }
-        atualizarContador();
-        $textarea.on("input", function () {
-          atualizarContador();
-          $mensagemValidacao.addClass("d-none");
-          $textarea.removeClass("is-invalid");
-        });
-        $form.on("submit", function (event) {
-          const descricao = $textarea.val().trim();
-          if (descricao.length < 12) {
-            event.preventDefault();
-            $mensagemValidacao.removeClass("d-none");
-            $textarea.addClass("is-invalid").trigger("focus");
-            return;
-          }
-          $botao.addClass("is-loading").prop("disabled", true);
-        });
-        const erroFlask = $("#erroFlask").data("erro");
-        if (erroFlask) {
-          Swal.fire({
-            icon: "error",
-            title: "Não foi possível analisar",
-            text: erroFlask,
-            confirmButtonText: "Entendi",
-            confirmButtonColor: "#005de0",
-          });
-        }
-        const elementoModal = document.getElementById("modalResultado");
-        if (elementoModal) {
-          const modalResultado = new bootstrap.Modal(elementoModal);
-          modalResultado.show();
-        }
-      });
-    </script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
   </body>
 </html>

@@ -1,15 +1,48 @@
-#Ambiente virtual Python
+# Ambientes virtuais Python
 .venv/
+venv/
+env/
 
-#Cache do Python
+# Cache e arquivos compilados do Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+.pytest_cache/
 
-#Configurações locais do VS Code
+# Cobertura de testes
+.coverage
+htmlcov/
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
+!.env.example
+.flaskenv
+
+# Configurações locais do VS Code e FTP
 .vscode/
 
-#Variáveis de ambiente e informações sensíveis
-.env
-
-#Logs
+# Logs
 *.log
+
+# Arquivos temporários e de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Backups locais do app e scripts temporários de diagnóstico
+app_backup_*.py
+auditar_helpdesk_leitura.py
+inspecionar_impressora.py
+conexao.py
+
+# Exportações, dumps e backups de banco locais
+*.sql.gz
+*.dump
+*.bak
+
+# Dados locais que podem conter descrições reais de chamados
+data/*.csv
+
+# Modelos binários: versionar somente se você decidir
+# conscientemente mantê-los no repositório.
+models/*.pkl

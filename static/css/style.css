@@ -37,6 +37,26 @@ body {
     sans-serif;
 }
 
+a {
+  text-decoration: none;
+}
+
+.btn-dashboard {
+  text-size: 16x;
+  color: #f1f1f1;
+  font-weight: 600;
+}
+
+.btn-dashboard a {
+  text-decoration: none !important;
+}
+
+.status-text {
+  font-size: 16px;
+  color: #f1f1f1;
+  font-weight: 600;
+}
+
 .topbar {
   background: rgba(19, 36, 63, 0.98);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -103,9 +123,8 @@ body {
 }
 
 h1 {
-  max-width: 11ch;
   margin-bottom: 1rem;
-  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-size: 48px;
   font-weight: 800;
   letter-spacing: -0.055em;
   line-height: 1.02;
@@ -475,4 +494,99 @@ h1 {
 }
 .modal-backdrop.show {
   opacity: 0.55;
+}
+
+.triage-signals {
+  border: 1px solid #dbe5f0;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 14px 16px;
+}
+
+.triage-signals-title {
+  color: #24405f;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.triage-signal-row {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.triage-signal-label {
+  color: #65758b;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.triage-signal-value {
+  color: #1f2f43;
+  font-size: 0.88rem;
+}
+
+.swal2-popup {
+  border-radius: 18px !important;
+  padding: 2rem 2rem 1.6rem !important;
+}
+
+.swal2-title {
+  color: #27364a !important;
+  font-size: 1.55rem !important;
+  line-height: 1.25 !important;
+}
+
+.swal2-html-container {
+  color: #526174 !important;
+  font-size: 1rem !important;
+  line-height: 1.55 !important;
+  margin: 0.85rem auto 1.25rem !important;
+  max-width: 470px !important;
+}
+
+.swal-triage-message {
+  text-align: left;
+}
+
+.swal-triage-lead {
+  margin-bottom: 1rem;
+}
+
+.swal-triage-details {
+  background: #f7faff;
+  border: 1px solid #dce8f6;
+  border-radius: 10px;
+  margin-top: 1rem;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+}
+
+.swal-triage-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.2rem 0;
+}
+
+.swal-triage-label {
+  color: #65758b;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.swal-triage-value {
+  color: #25364b;
+  font-size: 0.88rem;
+}
+
+.swal2-confirm {
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  min-width: 160px !important;
 }

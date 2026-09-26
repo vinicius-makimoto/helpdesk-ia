@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <meta
+      name="description"
+      content="Dashboard administrativo de chamados do HelpDesk IA."
+    />
+    <meta name="theme-color" content="#13243f" />
+    <title>Dashboard de Chamados | HelpDesk IA</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
+  </head>
+
+  <body class="dashboard-page">
+    {% set estado = dashboard_state|default('empty') %}
+    {% set dados = dashboard_data|default(none) %}
+    {% set filtros_ativos = filtros|default({}) %}
+    {% set opcoes_filtros = opcoes|default({}) %}
+
+    <header class="dashboard-topbar">
+      <nav
+        class="container dashboard-topbar-content"
+        aria-label="Navegação principal"
+      >
+        <a
+          class="dashboard-brand"
+          href="{{ url_for('inicio') }}"
+          aria-label="Voltar para abertura de chamado"
+        >
+          <span class="dashboard-brand-icon">
+            <i class="bi bi-chat-square-dots-fill"></i>
+          </span>
+
+          <span class="dashboard-brand-name">
+            HelpDesk <strong>IA</strong>
+          </span>
+        </a>
+
+        <div class="dashboard-topbar-actions">
+          <a
+            class="btn btn-outline-light btn-sm dashboard-back-button"
+            href="{{ url_for('inicio') }}"
+          >
+            <i class="bi bi-arrow-left me-1"></i>
+            Abrir chamado
+          </a>
+
+          <button
+            id="btnAtualizarDashboard"
+            type="button"
+            class="btn btn-light btn-sm dashboard-refresh-button"
+            aria-label="Atualizar informações do dashboard"
+          >
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Atualizar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="dashboard-main">
+      <div class="container">
+        <section class="dashboard-hero" aria-labelledby="dashboardTitle">
+          <div>
+            <span class="dashboard-eyebrow">
+              <i class="bi bi-grid-1x2-fill"></i>
+              Gestão de atendimento
+            </span>
+
+            <h1 id="dashboardTitle">Dashboard de Chamados</h1>
+
+            <p>
+              Acompanhe o panorama dos chamados registrados e sua distribuição
+              operacional.
+            </p>
+          </div>
+
+          <span class="dashboard-page-status">
+            <span class="dashboard-page-status-dot"></span>
+            Painel administrativo
+          </span>
+        </section>
+
+        {% if estado == 'loading' %}
+        <section
+          class="dashboard-feedback dashboard-loading-state"
+          aria-live="polite"
+        >
+          <div class="dashboard-feedback-icon">
+            <div
+              class="spinner-border text-primary"
+              role="status"
+              aria-label="Carregando dados do dashboard"
+            ></div>
+          </div>
+
+          <div>
+            <h2>Carregando informações</h2>
+            <p>
+              Aguarde enquanto os dados do dashboard são preparados.
+            </p>
+          </div>
+        </section>
+
+        {% elif estado == 'error' %}
+        <section
+          class="dashboard-feedback dashboard-error-state"
+          aria-live="assertive"
+        >
+          <div class="dashboard-feedback-icon">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+
+          <div>
+            <h2>Não foi possível carregar o dashboard</h2>
+            <p>
+              Tente atualizar a página. Se o problema continuar, verifique a
+              disponibilidade do sistema.
+            </p>
+
+            <button
+              id="btnTentarNovamente"
+              type="button"
+              class="btn btn-primary"
+            >
+              <i class="bi bi-arrow-clockwise me-1"></i>
+              Tentar novamente
+            </button>
+          </div>
+        </section>
+
+        {% elif estado == 'data' and dados %}
+        <div id="dashboardContent">
+          <!-- 1. Resumo geral -->
+          <section
+            class="dashboard-metrics-grid"
+            aria-label="Resumo geral dos chamados"
+          >
+            <article class="dashboard-metric-card">
+              <div class="dashboard-metric-icon metric-icon-total">
+                <i class="bi bi-collection"></i>
+              </div>
+
+              <div>
+                <span class="dashboard-metric-label">
+                  Total de chamados
+                </span>
+
+                <strong class="dashboard-metric-value">
+                  {{ dados.metrics['total']|default('—') }}
+                </strong>
+
+                <small class="dashboard-metric-caption">
+                  Registros encontrados
+                </small>
+              </div>
+            </article>
+
+            <article class="dashboard-metric-card">
+              <div class="dashboard-metric-icon metric-icon-open">
+                <i class="bi bi-folder2-open"></i>
+              </div>
+
+              <div>
+                <span class="dashboard-metric-label">
+                  Abertos
+                </span>
+
+                <strong class="dashboard-metric-value">
+                  {{ dados.metrics['open']|default('—') }}
+                </strong>
+
+                <small class="dashboard-metric-caption">
+                  Chamados em atendimento
+                </small>
+              </div>
+            </article>
+
+            <article class="dashboard-metric-card">
+              <div class="dashboard-metric-icon metric-icon-review">
+                <i class="bi bi-person-check"></i>
+              </div>
+
+              <div>
+                <span class="dashboard-metric-label">
+                  Em revisão
+                </span>
+
+                <strong class="dashboard-metric-value">
+                  {{ dados.metrics['review']|default('—') }}
+                </strong>
+
+                <small class="dashboard-metric-caption">
+                  Aguardando revisão manual
+                </small>
+              </div>
+            </article>
+
+            <article class="dashboard-metric-card">
+              <div class="dashboard-metric-icon metric-icon-completed">
+                <i class="bi bi-check2-circle"></i>
+              </div>
+
+              <div>
+                <span class="dashboard-metric-label">
+                  Concluídos
+                </span>
+
+                <strong class="dashboard-metric-value">
+                  {{ dados.metrics['completed']|default('—') }}
+                </strong>
+
+                <small class="dashboard-metric-caption">
+                  Chamados finalizados
+                </small>
+              </div>
+            </article>
+          </section>
+
+          <!-- 2. Cards por categoria: aparecem antes dos filtros -->
+          <section
+            class="dashboard-section dashboard-categories-section"
+            aria-labelledby="categoriasTitle"
+          >
+            <div class="dashboard-section-header">
+              <div>
+                <span class="dashboard-section-kicker">
+                  Chamados abertos
+                </span>
+
+                <h2 id="categoriasTitle">
+                  Categorias em atendimento
+                </h2>
+              </div>
+
+              <span class="dashboard-section-description">
+                Chamados classificados por categoria.
+              </span>
+            </div>
+
+            {% if dados.categories %}
+            <div
+              class="dashboard-categories-grid"
+              aria-label="Quantidade de chamados abertos por categoria"
+            >
+              {% for categoria in dados.categories %}
+              <article
+                class="dashboard-category-card dashboard-category-card-static"
+                data-category="{{ categoria.name }}"
+                aria-label="{{ categoria.name }}: {{ categoria.open_count }} chamados abertos"
+              >
+                <div class="dashboard-category-card-top">
+                  <span class="dashboard-category-icon">
+                    {% if categoria.name == 'Hardware' %}
+                    <i class="bi bi-cpu"></i>
+
+                    {% elif categoria.name == 'Software' %}
+                    <i class="bi bi-window"></i>
+
+                    {% elif categoria.name == 'Acesso' %}
+                    <i class="bi bi-person-lock"></i>
+
+                    {% elif categoria.name == 'Rede' %}
+                    <i class="bi bi-diagram-3"></i>
+
+                    {% elif categoria.name == 'Segurança' %}
+                    <i class="bi bi-shield-lock"></i>
+
+                    {% elif categoria.name == 'Impressora' %}
+                    <i class="bi bi-printer"></i>
+
+                    {% elif categoria.name == 'E-mail' %}
+                    <i class="bi bi-envelope"></i>
+
+                    {% else %}
+                    <i class="bi bi-tag"></i>
+                    {% endif %}
+                  </span>
+
+                  <i
+                    class="bi bi-chevron-right dashboard-category-future-icon"
+                    aria-hidden="true"
+                  ></i>
+                </div>
+
+                <span class="dashboard-category-name">
+                  {{ categoria.name }}
+                </span>
+
+                <strong class="dashboard-category-total">
+                  {{ categoria.open_count }}
+                </strong>
+
+                <small class="dashboard-category-caption">
+                  chamados abertos
+                </small>
+              </article>
+              {% endfor %}
+            </div>
+
+            {% else %}
+            <div class="dashboard-inline-empty">
+              <i class="bi bi-inbox me-2"></i>
+              Nenhuma categoria com chamados abertos disponível ainda.
+            </div>
+            {% endif %}
+          </section>
+
+          <!-- 3. Filtros -->
+          <section
+            class="dashboard-filter-card"
+            aria-labelledby="filtrosDashboardTitle"
+          >
+            <div class="dashboard-filter-header">
+              <div>
+                <span class="dashboard-section-kicker">
+                  Consulta
+                </span>
+
+                <h2 id="filtrosDashboardTitle">Filtros</h2>
+              </div>
+
+              <a
+                class="btn btn-sm btn-link dashboard-clear-filters"
+                href="{{ url_for('dashboard') }}"
+              >
+                <i class="bi bi-x-circle me-1"></i>
+                Limpar filtros
+              </a>
+            </div>
+
+            <form
+              id="formFiltrosDashboard"
+              action="{{ url_for('dashboard') }}"
+              method="GET"
+              class="row g-3"
+            >
+              <div class="col-12 col-md-6 col-xl">
+                <label for="periodoInicio" class="form-label">
+                  Período inicial
+                </label>
+
+                <input
+                  type="date"
+                  class="form-control"
+                  id="periodoInicio"
+                  name="periodo_inicio"
+                  value="{{ filtros_ativos.periodo_inicio|default('') }}"
+                />
+              </div>
+
+              <div class="col-12 col-md-6 col-xl">
+                <label for="periodoFim" class="form-label">
+                  Período final
+                </label>
+
+                <input
+                  type="date"
+                  class="form-control"
+                  id="periodoFim"
+                  name="periodo_fim"
+                  value="{{ filtros_ativos.periodo_fim|default('') }}"
+                />
+              </div>
+
+              <div class="col-12 col-md-6 col-xl">
+                <label for="filtroCategoria" class="form-label">
+                  Categoria
+                </label>
+
+                <select
+                  class="form-select"
+                  id="filtroCategoria"
+                  name="categoria"
+                >
+                  <option value="">Todas</option>
+
+                  {% for categoria in opcoes_filtros.categorias|default([]) %}
+                  <option
+                    value="{{ categoria.value }}"
+                    {% if filtros_ativos.categoria|default('') == categoria.value %}selected{% endif %}
+                  >
+                    {{ categoria.label }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl">
+                <label for="filtroPrioridade" class="form-label">
+                  Prioridade
+                </label>
+
+                <select
+                  class="form-select"
+                  id="filtroPrioridade"
+                  name="prioridade"
+                >
+                  <option value="">Todas</option>
+
+                  {% for prioridade in opcoes_filtros.prioridades|default([]) %}
+                  <option
+                    value="{{ prioridade.value }}"
+                    {% if filtros_ativos.prioridade|default('') == prioridade.value %}selected{% endif %}
+                  >
+                    {{ prioridade.label }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl">
+                <label for="filtroSetor" class="form-label">
+                  Setor
+                </label>
+
+                <select
+                  class="form-select"
+                  id="filtroSetor"
+                  name="setor"
+                >
+                  <option value="">Todos</option>
+
+                  {% for setor in opcoes_filtros.setores|default([]) %}
+                  <option
+                    value="{{ setor.value }}"
+                    {% if filtros_ativos.setor|default('') == setor.value %}selected{% endif %}
+                  >
+                    {{ setor.label }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl">
+                <label for="filtroStatus" class="form-label">
+                  Status
+                </label>
+
+                <select
+                  class="form-select"
+                  id="filtroStatus"
+                  name="status"
+                >
+                  <option value="">Todos</option>
+
+                  {% for status in opcoes_filtros.statuses|default([]) %}
+                  <option
+                    value="{{ status.value }}"
+                    {% if filtros_ativos.status|default('') == status.value %}selected{% endif %}
+                  >
+                    {{ status.label }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div
+                class="col-12 d-flex justify-content-end align-items-end"
+              >
+                <button
+                  type="submit"
+                  class="btn btn-primary dashboard-filter-submit"
+                >
+                  <i class="bi bi-funnel me-1"></i>
+                  Aplicar filtros
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <!-- 4. Gráficos -->
+          <section
+            class="dashboard-section"
+            aria-labelledby="graficosTitle"
+          >
+            <div class="dashboard-section-header">
+              <div>
+                <span class="dashboard-section-kicker">
+                  Visão analítica
+                </span>
+
+                <h2 id="graficosTitle">Indicadores</h2>
+              </div>
+
+              <span class="dashboard-section-description">
+                Dados consolidados pelo backend.
+              </span>
+            </div>
+
+            <div class="dashboard-charts-grid">
+              <article class="dashboard-chart-card">
+                <div class="dashboard-chart-card-header">
+                  <div>
+                    <h3>Chamados por prioridade</h3>
+                    <p>Distribuição dos chamados por prioridade.</p>
+                  </div>
+
+                  <span class="dashboard-chart-icon">
+                    <i class="bi bi-bar-chart"></i>
+                  </span>
+                </div>
+
+                <div
+                  class="dashboard-chart"
+                  data-chart-key="priority"
+                  aria-label="Gráfico de chamados por prioridade"
+                >
+                  <div class="dashboard-chart-empty">
+                    Nenhum dado disponível ainda.
+                  </div>
+                </div>
+              </article>
+
+              <article class="dashboard-chart-card">
+                <div class="dashboard-chart-card-header">
+                  <div>
+                    <h3>Chamados por setor</h3>
+                    <p>Distribuição conforme o setor responsável.</p>
+                  </div>
+
+                  <span class="dashboard-chart-icon">
+                    <i class="bi bi-building"></i>
+                  </span>
+                </div>
+
+                <div
+                  class="dashboard-chart"
+                  data-chart-key="sector"
+                  aria-label="Gráfico de chamados por setor"
+                >
+                  <div class="dashboard-chart-empty">
+                    Nenhum dado disponível ainda.
+                  </div>
+                </div>
+              </article>
+
+              <article class="dashboard-chart-card">
+                <div class="dashboard-chart-card-header">
+                  <div>
+                    <h3>Chamados por status</h3>
+                    <p>Situação operacional dos chamados.</p>
+                  </div>
+
+                  <span class="dashboard-chart-icon">
+                    <i class="bi bi-pie-chart"></i>
+                  </span>
+                </div>
+
+                <div
+                  class="dashboard-chart"
+                  data-chart-key="status"
+                  aria-label="Gráfico de chamados por status"
+                >
+                  <div class="dashboard-chart-empty">
+                    Nenhum dado disponível ainda.
+                  </div>
+                </div>
+              </article>
+
+              <article class="dashboard-chart-card">
+                <div class="dashboard-chart-card-header">
+                  <div>
+                    <h3>Evolução diária</h3>
+                    <p>Chamados registrados por dia.</p>
+                  </div>
+
+                  <span class="dashboard-chart-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                  </span>
+                </div>
+
+                <div
+                  class="dashboard-chart"
+                  data-chart-key="daily"
+                  aria-label="Gráfico de evolução diária de chamados"
+                >
+                  <div class="dashboard-chart-empty">
+                    Nenhum dado disponível ainda.
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- 5. Tabela e paginação -->
+          <section
+            class="dashboard-section"
+            aria-labelledby="chamadosTitle"
+          >
+            <div class="dashboard-section-header">
+              <div>
+                <span class="dashboard-section-kicker">
+                  Registros
+                </span>
+
+                <h2 id="chamadosTitle">Chamados</h2>
+              </div>
+
+              <span class="dashboard-section-description">
+                Informações fornecidas pelo sistema de atendimento.
+              </span>
+            </div>
+
+            {% if dados.tickets %}
+            <div class="dashboard-table-card">
+              <div class="table-responsive">
+                <table class="table dashboard-table align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col">Protocolo</th>
+                      <th scope="col">Data</th>
+                      <th scope="col">Descrição</th>
+                      <th scope="col">Categoria</th>
+                      <th scope="col">Prioridade</th>
+                      <th scope="col">Setor</th>
+                      <th scope="col">Status</th>
+                      <th scope="col" class="text-end">Ação</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {% for chamado in dados.tickets %}
+                    <tr>
+                      <td>
+                        <strong class="dashboard-protocol">
+                          {{ chamado.protocol|default('—') }}
+                        </strong>
+                      </td>
+
+                      <td class="dashboard-date">
+                        {{ chamado.created_at_label|default('—') }}
+                      </td>
+
+                      <td>
+                        <span class="dashboard-summary">
+                          {{ chamado.summary|default('Sem descrição disponível.') }}
+                        </span>
+                      </td>
+
+                      <td>
+                        {{ chamado.category_label|default('Não classificado') }}
+                      </td>
+
+                      <td>
+                        {{ chamado.priority_label|default('Em definição') }}
+                      </td>
+
+                      <td>
+                        {{ chamado.sector_label|default('Em definição') }}
+                      </td>
+
+                      <td>
+                        <span class="dashboard-status-badge">
+                          {{ chamado.status_label|default('Em revisão') }}
+                        </span>
+                      </td>
+
+                      <td class="text-end">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-primary dashboard-details-button"
+                          disabled
+                          aria-disabled="true"
+                          title="Detalhes serão disponibilizados em etapa futura."
+                        >
+                          Detalhes
+                        </button>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {% else %}
+            <div class="dashboard-inline-empty">
+              <i class="bi bi-inbox me-2"></i>
+              Nenhum chamado encontrado para os filtros selecionados.
+            </div>
+            {% endif %}
+
+            {% if dados.pagination and dados.pagination.total_pages|default(0) > 1 %}
+            <nav
+              class="dashboard-pagination-wrapper"
+              aria-label="Paginação de chamados"
+            >
+              <ul class="pagination dashboard-pagination mb-0">
+                {% set pagina_atual = dados.pagination.page|default(1) %}
+                {% set total_paginas = dados.pagination.total_pages|default(1) %}
+
+                <li class="page-item {% if pagina_atual <= 1 %}disabled{% endif %}">
+                  <a
+                    class="page-link"
+                    href="{{ dados.pagination.previous_url or '#' }}"
+                    aria-label="Página anterior"
+                  >
+                    <i class="bi bi-chevron-left"></i>
+                  </a>
+                </li>
+
+                {% for pagina in range(1, total_paginas + 1) %}
+                <li class="page-item {% if pagina == pagina_atual %}active{% endif %}">
+                  <a
+                    class="page-link"
+                    href="{{ dados.pagination.page_urls[pagina] }}"
+                  >
+                    {{ pagina }}
+                  </a>
+                </li>
+                {% endfor %}
+
+                <li class="page-item {% if pagina_atual >= total_paginas %}disabled{% endif %}">
+                  <a
+                    class="page-link"
+                    href="{{ dados.pagination.next_url or '#' }}"
+                    aria-label="Próxima página"
+                  >
+                    <i class="bi bi-chevron-right"></i>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+            {% endif %}
+          </section>
+        </div>
+
+        <script
+          id="dashboardChartData"
+          type="application/json"
+        >
+          {{ dados.charts|default({})|tojson }}
+        </script>
+
+        {% else %}
+        <section
+          class="dashboard-feedback dashboard-empty-state"
+          aria-live="polite"
+        >
+          <div class="dashboard-feedback-icon">
+            <i class="bi bi-bar-chart-line"></i>
+          </div>
+
+          <div>
+            <h2>Nenhum dado disponível ainda</h2>
+
+            <p>
+              Os indicadores, categorias, gráficos e registros aparecerão aqui
+              quando houver dados disponíveis para consulta.
+            </p>
+          </div>
+        </section>
+        {% endif %}
+      </div>
+    </main>
+
+    <footer class="dashboard-footer">
+      <div class="container">
+        <span>HelpDesk IA</span>
+        <span>Gestão de chamados</span>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script
+      src="{{ url_for('static', filename='js/dashboard.js') }}"
+    ></script>
+  </body>
+</html>
